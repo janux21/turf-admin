@@ -12,78 +12,29 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-// Root route (important for Railway)
+// Root route
 app.get('/', (req, res) => {
   res.send("Turf Booking API is running 🚀");
 });
 
-// API test route
+// Test API
 app.get('/api', (req, res) => {
   res.json({ message: "API working successfully" });
 });
 
-// MongoDB Connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB connected successfully');
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    setTimeout(connectDB, 5000);
-  }
-};
+// ================= MONGODB CONNECTION =================
 
-connectDB();
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("MongoDB connected successfully"))
+.catch(err => console.log("MongoDB connection error:", err));
+
 
 // ================= USER MODEL =================
 
-const express = require('express');
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
-require('dotenv').config();
-
-const authRoutes = require("./routes/authRoutes");
-
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.use("/api/auth", authRoutes);
-
-// Root route (important for Railway)
-app.get('/', (req, res) => {
-  res.send("Turf Booking API is running 🚀");
-});
-
-// API test route
-app.get('/api', (req, res) => {
-  res.json({ message: "API working successfully" });
-});
-
-// MongoDB Connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB connected successfully');
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    setTimeout(connectDB, 5000);
-  }
-};
-
-connectDB();
-
-// ================= USER MODEL =================
 const UserSchema = new mongoose.Schema({
   name: String,
   phone: String,
-  email: String,
+  email: { type: String, unique: true },
   password: String
 });
 
@@ -93,7 +44,9 @@ const User = mongoose.model('User', UserSchema);
 // ================= LOGIN ROUTE =================
 
 app.post('/api/auth/login', async (req, res) => {
+
   try {
+
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -108,14 +61,26 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    res.json({ token });
+    res.json({
+      success: true,
+      token
+    });
 
   } catch (err) {
+
+    console.error(err);
     res.status(500).json({ message: "Server error" });
+
   }
-};;
+
+});
+
 
 // ================= BOOKING MODEL =================
 
@@ -130,6 +95,7 @@ const BookingSchema = new mongoose.Schema({
 
 const Booking = mongoose.model('Booking', BookingSchema);
 
+
 // ================= AUTH MIDDLEWARE =================
 
 const authMiddleware = (req, res, next) => {
@@ -137,21 +103,24 @@ const authMiddleware = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    return res.status(401).json({ message: "No token provided" });
   }
 
   try {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     req.userId = decoded.id;
 
     next();
 
   } catch (err) {
-    res.status(401).json({ message: 'Invalid token' });
+
+    res.status(401).json({ message: "Invalid token" });
+
   }
+
 };
+
 
 // ================= BOOKING ROUTE =================
 
@@ -179,21 +148,19 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
 
   } catch (err) {
 
-    console.error('Booking error:', err);
+    console.error("Booking error:", err);
 
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
 
   }
 
 });
 
+
 // ================= START SERVER =================
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
-
-
