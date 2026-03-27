@@ -40,28 +40,6 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
-// ================= CREATE ADMIN (RUN ONCE) =================
-
-app.get('/create-admin', async (req, res) => {
-  try {
-
-    const hashedPassword = await bcrypt.hash("admin1234", 10);
-
-    const admin = new User({
-      name: "Admin",
-      phone: "9999999999",
-      email: "admin@gmail.com",
-      password: hashedPassword
-    });
-
-    await admin.save();
-
-    res.send("Admin created successfully");
-
-  } catch (err) {
-    res.send(err.message);
-  }
-});
 
 
 // ================= LOGIN ROUTE =================
