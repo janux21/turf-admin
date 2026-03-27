@@ -111,7 +111,7 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
 // Get all bookings (shared for all admins)
 app.get('/api/bookings', authMiddleware, async (req, res) => {
   try {
-    const bookings = await Booking.find().populate('createdBy', 'name email');
+    const bookings = await Booking.find().populate('userId', 'name email');
     res.json({ success: true, bookings });
   } catch (err) {
     console.error(err);
