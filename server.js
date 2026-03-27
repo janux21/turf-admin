@@ -82,16 +82,30 @@ app.post('/api/auth/login', async (req, res) => {
 
 // ================= BOOKING MODEL =================
 
-const BookingSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+const mongoose = require('mongoose');
+
+const bookingSchema = new mongoose.Schema({
+
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
+
+  customerName: String,
+
+  mobile: String,
+
   date: Date,
+
   slot: String,
-  hours: Number,
-  totalPrice: Number,
-  paymentId: String
+
+  hours: String
+
 });
 
-const Booking = mongoose.model('Booking', BookingSchema);
+module.exports = mongoose.model("Booking", bookingSchema);;
+
+
 
 
 // ================= AUTH MIDDLEWARE =================
@@ -126,15 +140,15 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
 
   try {
 
-    const { date, slot, hours, totalPrice, paymentId } = req.body;
+    const { customerName, mobile, date, slot, hours } = req.body;
 
     const newBooking = new Booking({
       userId: req.userId,
+      customerName,
+      mobile,
       date,
       slot,
-      hours,
-      totalPrice,
-      paymentId
+      hours
     });
 
     await newBooking.save();
@@ -153,7 +167,7 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
   }
 
 });
-
+ 
 
 // ================= START SERVER =================
 
