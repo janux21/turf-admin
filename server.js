@@ -33,11 +33,28 @@ const User = mongoose.model('User', UserSchema);
 
 // ================= BOOKING MODEL =================
 const BookingSchema = new mongoose.Schema({
-  customerName: String,
-  mobile: String,
-  date: Date,
-  slot: String,
-  hours: String,
+  customerName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  mobile: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  date: {
+    type: Date,
+    required: true
+  },
+  slot: {
+    type: String,
+    required: true
+  },
+  hours: {
+    type: String,
+    required: true
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
@@ -47,13 +64,13 @@ const BookingSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
 const Booking = mongoose.model("Booking", BookingSchema);
 
 // ================= AUTH MIDDLEWARE =================
 const authMiddleware = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ message: "No token provided" });
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.id;
@@ -64,7 +81,6 @@ const authMiddleware = (req, res, next) => {
 };
 
 // ================= AUTH ROUTES =================
-
 // Admin login
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -100,7 +116,6 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
     });
 
     await newBooking.save();
-
     res.status(201).json({ success: true, booking: newBooking });
   } catch (err) {
     console.error("Booking error:", err);
@@ -108,22 +123,20 @@ app.post('/api/bookings', authMiddleware, async (req, res) => {
   }
 });
 
-// Get all bookings (shared for all admins)
-// ================= GET ALL BOOKINGS =================
+// Get all bookings 
 app.get('/api/bookings', authMiddleware, async (req, res) => {
   try {
-    // Fetch all bookings and populate the admin info (name, email)
     const bookings = await Booking.find()
       .populate({
-        path: 'userId',           // ← Changed to object format
-        select: 'name email',     // fields you want to populate
-        strictPopulate: false     // ← This fixes the error
+        path: 'createdBy',           // ← Fixed: Changed from 'userId' to 'createdBy'
+        select: 'name email',        // Get name and email of the admin
+        strictPopulate: false        // ← This prevents the StrictPopulateError
       })
-      .sort({ date: -1 }); 
+      .sort({ date: -1 });           // Latest bookings first
 
     res.json({
       success: true,
-      bookings, 
+      bookings,
     });
   } catch (err) {
     console.error("Error fetching bookings:", err);
