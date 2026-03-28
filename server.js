@@ -166,8 +166,7 @@ app.delete('/api/bookings/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// Get all bookings
-app.get('/api/bookings', authMiddleware, async (req, res) => {
+
 
 // ================= START SERVER =================
 const PORT = process.env.PORT || 5000;
