@@ -144,6 +144,31 @@ app.get('/api/bookings', authMiddleware, async (req, res) => {
   }
 });
 
+// Delete booking
+app.delete('/api/bookings/:id', authMiddleware, async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+
+    const deletedBooking = await Booking.findByIdAndDelete(bookingId);
+
+    if (!deletedBooking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Booking deleted successfully"
+    });
+
+  } catch (err) {
+    console.error("Delete booking error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get all bookings
+app.get('/api/bookings', authMiddleware, async (req, res) => {
+
 // ================= START SERVER =================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
