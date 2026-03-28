@@ -114,14 +114,17 @@ app.get('/api/bookings', authMiddleware, async (req, res) => {
   try {
     // Fetch all bookings and populate the admin info (name, email)
     const bookings = await Booking.find()
-      .populate('userId', 'name email')   // populate admin who created it
-      .sort({ date: -1 });                // optional: sort latest first
+      .populate({
+        path: 'userId',           // ← Changed to object format
+        select: 'name email',     // fields you want to populate
+        strictPopulate: false     // ← This fixes the error
+      })
+      .sort({ date: -1 }); 
 
     res.json({
       success: true,
-      bookings, // this is now a List
+      bookings, 
     });
-
   } catch (err) {
     console.error("Error fetching bookings:", err);
     res.status(500).json({ message: "Server error" });
